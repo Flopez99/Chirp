@@ -1,0 +1,29 @@
+[
+  {
+    "name": "Bald Eagle",
+    "scientificName": "Haliaeetus leucocephalus",
+    "photoUrl": "assets/Placeholder.jpg",
+    "description": "The bald eagle is a bird of prey found in North America, known for its white head and tail.",
+    "commonlySeen": true,
+    "rarity": "Rare",
+    "endangered": false
+  },
+  {
+    "name": "Northern Cardinal",
+    "scientificName": "Cardinalis cardinalis",
+    "photoUrl": "assets/Placeholder.jpg",
+    "description": "Bright red songbird found in woodlands and gardens, especially in the eastern United States.",
+    "commonlySeen": true,
+    "rarity": "Common",
+    "endangered": false
+  },
+  {
+    "name": "California Condor",
+    "scientificName": "Gymnogyps californianus",
+    "photoUrl": "assets/Placeholder.jpg",
+    "description": "Critically endangered New World vulture and one of the world’s rarest bird species.",
+    "commonlySeen": false,
+    "rarity": "Mythic",
+    "endangered": true
+  }
+]
