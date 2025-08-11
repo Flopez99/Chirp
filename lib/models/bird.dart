@@ -3,6 +3,7 @@ class Bird {
   final String scientificName;
   final String? photoUrl;
   final String? description;
+  final String? conservationStatus;
   final bool commonlySeen;
   final String rarity; // e.g. "Common", "Rare", "Very Rare", "Mythic"
   final bool endangered;
@@ -15,6 +16,7 @@ class Bird {
     required this.commonlySeen,
     required this.rarity,
     required this.endangered,
+    required this.conservationStatus,
   });
 
   factory Bird.fromJson(Map<String, dynamic> json) {
@@ -26,6 +28,7 @@ class Bird {
       commonlySeen: json['commonlySeen'] ?? false,
       rarity: json['rarity'] ?? 'Unknown',
       endangered: json['endangered'] ?? false,
+      conservationStatus: json['conservationStatus'] ?? 'Unknown',
     );
   }
 
@@ -38,6 +41,7 @@ class Bird {
       'commonlySeen': commonlySeen,
       'rarity': rarity,
       'endangered': endangered,
+      'conservation_status': conservationStatus,
     };
   }
 }

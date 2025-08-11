@@ -1,8 +1,18 @@
+import 'package:chirp/utils/bird_repository.dart';
 import 'package:flutter/material.dart';
 import 'screens/login_screen.dart';
+import 'package:provider/provider.dart';
+import 'providers/user_provider.dart';
 
-void main() {
-  runApp(const ChirpApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await BirdRepository().getBirds();
+  runApp(
+    MultiProvider(
+      providers: [ChangeNotifierProvider(create: (_) => UserProvider())],
+      child: const ChirpApp(),
+    ),
+  );
 }
 
 class ChirpApp extends StatelessWidget {
@@ -14,7 +24,7 @@ class ChirpApp extends StatelessWidget {
       title: 'Chirp',
       theme: ThemeData(primarySwatch: Colors.green),
       debugShowCheckedModeBanner: false,
-      home: const LoginScreen(),
+      home: const LoginScreen(), //First screen the user sees
     );
   }
 }

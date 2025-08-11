@@ -1,14 +1,14 @@
+import 'package:chirp/providers/user_provider.dart';
 import 'package:chirp/screens/bird_catalogue_page.dart';
 import 'package:chirp/screens/bird_map_page.dart';
 import 'package:chirp/screens/latest_finds_page.dart';
 import 'package:chirp/screens/my_aviary_page.dart';
 import 'package:flutter/material.dart';
 import 'package:chirp/screens/login_screen.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
-  final String username;
-
-  const HomePage({required this.username, super.key});
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -27,6 +27,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width >= 800;
+    final username = Provider.of<UserProvider>(context).username;
 
     void logout() {
       Navigator.pushReplacement(
@@ -37,7 +38,7 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Welcome, ${widget.username}'),
+        title: Text(username),
         actions: [
           TextButton(
             onPressed: () => logout(),

@@ -14,11 +14,24 @@ class BirdDetailPage extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            if (bird.photoUrl != null)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.asset(bird.photoUrl!, height: 200),
-              ),
+            bird.photoUrl != null
+                ? (bird.photoUrl!.startsWith('http')
+                    ? Image.network(
+                      bird.photoUrl!,
+                      width: 200,
+                      height: 200,
+                      fit: BoxFit.cover,
+                      errorBuilder:
+                          (context, error, stackTrace) =>
+                              const Icon(Icons.broken_image, size: 40),
+                    )
+                    : Image.asset(
+                      bird.photoUrl!,
+                      width: 200,
+                      height: 200,
+                      fit: BoxFit.cover,
+                    ))
+                : const Icon(Icons.image_not_supported, size: 40),
             const SizedBox(height: 16),
             Text(
               bird.name,
@@ -34,7 +47,11 @@ class BirdDetailPage extends StatelessWidget {
             const SizedBox(height: 16),
             Row(
               children: [
-                Chip(label: Text('Rarity: ${bird.rarity}')),
+                Chip(
+                  label: Text(
+                    'Conservation Status: ${bird.conservationStatus}',
+                  ),
+                ),
                 const SizedBox(width: 8),
                 if (bird.endangered)
                   const Chip(
@@ -45,7 +62,7 @@ class BirdDetailPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            if (bird.commonlySeen) const Chip(label: Text('Commonly Seen')),
+            //if (bird.commonlySeen) const Chip(label: Text('Commonly Seen')),
           ],
         ),
       ),

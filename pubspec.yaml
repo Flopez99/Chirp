@@ -31,6 +31,12 @@ dependencies:
   dropdown_search: ^5.0.6
   flutter_map: ^6.1.0
   latlong2: ^0.9.0
+  intl: ^0.18.1
+  image_picker: ^1.1.0 # or latest version
+  path_provider: ^2.1.2
+  http: ^1.4.0
+  flutter_secure_storage: ^8.0.0
+  provider: ^6.0.0
 
   flutter:
     sdk: flutter

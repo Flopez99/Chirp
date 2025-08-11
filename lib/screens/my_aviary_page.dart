@@ -1,6 +1,7 @@
 import 'package:chirp/screens/bird_detail_page.dart';
 import 'package:chirp/utils/bird_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'log_sighting_page.dart';
 import '../utils/sighting_repository.dart';
 import '../models/bird_sighting.dart';
@@ -66,15 +67,31 @@ class _MyAviaryPageState extends State<MyAviaryPage> {
                                 ),
                           ),
                         ),
-                    leading: Image.asset(
-                      sighting.imagePath,
-                      width: 50,
-                      height: 50,
-                      fit: BoxFit.cover,
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child:
+                          (sighting.imagePath.startsWith('http')
+                              ? Image.network(
+                                sighting.imagePath,
+                                width: 60,
+                                height: 60,
+                                fit: BoxFit.cover,
+                                errorBuilder:
+                                    (context, error, stackTrace) => const Icon(
+                                      Icons.broken_image,
+                                      size: 40,
+                                    ),
+                              )
+                              : Image.asset(
+                                sighting.imagePath,
+                                width: 60,
+                                height: 60,
+                                fit: BoxFit.cover,
+                              )),
                     ),
                     title: Text(sighting.birdName),
                     subtitle: Text(
-                      "${sighting.dateTime.toLocal()} • ${sighting.locationName}",
+                      "${DateFormat('MM/dd/yyyy - hh:mm a').format(sighting.dateTime)} at ${sighting.locationName}",
                     ),
                   );
                 },

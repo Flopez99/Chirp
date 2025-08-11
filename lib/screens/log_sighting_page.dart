@@ -1,7 +1,15 @@
+import 'dart:io';
+
+import 'package:chirp/providers/user_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:dropdown_search/dropdown_search.dart'; // Add at the top
+import 'package:dropdown_search/dropdown_search.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import '../models/bird_sighting.dart';
+import '../models/bird.dart';
 import '../utils/sighting_repository.dart';
+import 'package:intl/intl.dart';
+import '../utils/bird_repository.dart';
 
 class LogSightingPage extends StatefulWidget {
   const LogSightingPage({super.key});
@@ -13,21 +21,25 @@ class LogSightingPage extends StatefulWidget {
 class _LogSightingPageState extends State<LogSightingPage> {
   final _formKey = GlobalKey<FormState>();
 
-  String? selectedBird;
+  Bird? selectedBird;
   DateTime selectedDateTime = DateTime.now();
-  // Image? selectedImage; <-- Placeholder for now
-  // LatLng? selectedLocation; <-- Placeholder for future map pin
+  File? selectedImage;
 
-  final List<String> birdOptions = [
-    "Bald Eagle",
-    "Northern Cardinal",
-    "California Condor",
-    "Not Sure?",
-    "Other",
-  ];
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        selectedImage = File(image.path);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final username = Provider.of<UserProvider>(context).username;
+
     return Scaffold(
       appBar: AppBar(title: const Text("Log a Sighting")),
       body: Padding(
@@ -41,44 +53,50 @@ class _LogSightingPageState extends State<LogSightingPage> {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              Container(
-                height: 150,
-                color: Colors.grey[300],
-                child: const Center(child: Text("Upload Image (TBD)")),
+              GestureDetector(
+                onTap: _pickImage,
+                child: Container(
+                  height: 150,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    border: Border.all(color: Colors.black26),
+                  ),
+                  child:
+                      selectedImage != null
+                          ? Image.file(selectedImage!, fit: BoxFit.cover)
+                          : const Center(child: Text("Tap to upload image")),
+                ),
               ),
 
               const SizedBox(height: 16),
-              DropdownSearch<String>(
-                items: birdOptions,
-                selectedItem: selectedBird,
-                dropdownDecoratorProps: const DropDownDecoratorProps(
-                  dropdownSearchDecoration: InputDecoration(
-                    labelText: "Select Bird",
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                popupProps: const PopupProps.menu(
-                  showSearchBox: true,
-                  searchFieldProps: TextFieldProps(
-                    decoration: InputDecoration(labelText: "Search bird..."),
-                  ),
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    selectedBird = value;
-                  });
+              FutureBuilder<List<Bird>>(
+                future: BirdRepository().getBirds(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return const Text("Failed to load birds");
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Text("No birds available");
+                  }
+                  final birds = snapshot.data!;
+
+                  return BirdDropdown(
+                    birds: birds,
+                    selectedBird: selectedBird,
+                    onChanged: (bird) {
+                      setState(() {
+                        selectedBird = bird;
+                      });
+                    },
+                  );
                 },
-                validator:
-                    (value) =>
-                        value == null || value.isEmpty
-                            ? "Please select a bird"
-                            : null,
               ),
 
               const SizedBox(height: 16),
               ListTile(
                 title: Text(
-                  "Date & Time: ${selectedDateTime.toLocal()}".split('.')[0],
+                  "Date & Time: ${DateFormat('MM/dd/yyyy - hh:mm a').format(selectedDateTime)}",
                 ),
                 trailing: const Icon(Icons.calendar_today),
                 onTap: () async {
@@ -118,13 +136,15 @@ class _LogSightingPageState extends State<LogSightingPage> {
               const SizedBox(height: 24),
               ElevatedButton.icon(
                 onPressed: () {
-                  if (_formKey.currentState!.validate()) {
+                  if (_formKey.currentState!.validate() &&
+                      selectedBird != null) {
                     final newSighting = BirdSighting(
-                      birdName: selectedBird!,
+                      seenBy: username,
+                      birdName: selectedBird!.name,
                       imagePath:
-                          "assets/Placeholder.jpg", // use selected image later
+                          selectedImage?.path ?? selectedBird?.photoUrl ?? '',
                       dateTime: selectedDateTime,
-                      locationName: "Unknown Location", // integrate map later
+                      locationName: "Unknown Location",
                     );
 
                     SightingRepository.addSighting(newSighting);
@@ -133,10 +153,7 @@ class _LogSightingPageState extends State<LogSightingPage> {
                       const SnackBar(content: Text("Sighting logged!")),
                     );
 
-                    Navigator.pop(
-                      context,
-                      true,
-                    ); // signal that something was submitted
+                    Navigator.pop(context, true);
                   }
                 },
                 icon: const Icon(Icons.save),
@@ -146,6 +163,70 @@ class _LogSightingPageState extends State<LogSightingPage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class BirdDropdown extends StatelessWidget {
+  final List<Bird> birds;
+  final Bird? selectedBird;
+  final ValueChanged<Bird?> onChanged;
+
+  const BirdDropdown({
+    required this.birds,
+    required this.selectedBird,
+    required this.onChanged,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownSearch<Bird>(
+      items: birds,
+      selectedItem: selectedBird,
+      itemAsString: (bird) => bird.name,
+      dropdownDecoratorProps: const DropDownDecoratorProps(
+        dropdownSearchDecoration: InputDecoration(
+          labelText: "Select Bird",
+          border: OutlineInputBorder(),
+        ),
+      ),
+      popupProps: PopupProps.dialog(
+        showSearchBox: true,
+        searchFieldProps: const TextFieldProps(
+          decoration: InputDecoration(
+            labelText: "Search bird...",
+            border: OutlineInputBorder(),
+          ),
+        ),
+        itemBuilder:
+            (context, bird, isSelected) => ListTile(
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child:
+                    bird.photoUrl != null
+                        ? (bird.photoUrl!.startsWith('http')
+                            ? Image.network(
+                              bird.photoUrl!,
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
+                              errorBuilder:
+                                  (context, error, stackTrace) =>
+                                      const Icon(Icons.broken_image, size: 40),
+                            )
+                            : Image.asset(
+                              bird.photoUrl!,
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
+                            ))
+                        : const Icon(Icons.image_not_supported, size: 40),
+              ),
+              title: Text(bird.name),
+            ),
+      ),
+      onChanged: onChanged,
     );
   }
 }

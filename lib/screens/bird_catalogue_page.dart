@@ -67,12 +67,24 @@ class _BirdCataloguePageState extends State<BirdCataloguePage> {
                   borderRadius: BorderRadius.circular(8),
                   child:
                       bird.photoUrl != null
-                          ? Image.asset(
-                            bird.photoUrl!,
-                            width: 60,
-                            height: 60,
-                            fit: BoxFit.cover,
-                          )
+                          ? (bird.photoUrl!.startsWith('http')
+                              ? Image.network(
+                                bird.photoUrl!,
+                                width: 60,
+                                height: 60,
+                                fit: BoxFit.cover,
+                                errorBuilder:
+                                    (context, error, stackTrace) => const Icon(
+                                      Icons.broken_image,
+                                      size: 40,
+                                    ),
+                              )
+                              : Image.asset(
+                                bird.photoUrl!,
+                                width: 60,
+                                height: 60,
+                                fit: BoxFit.cover,
+                              ))
                           : const Icon(Icons.image_not_supported, size: 40),
                 ),
                 title: Text(bird.name),

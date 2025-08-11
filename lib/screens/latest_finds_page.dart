@@ -1,6 +1,7 @@
 import 'package:chirp/screens/bird_detail_page.dart';
 import 'package:chirp/utils/bird_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../utils/sighting_repository.dart';
 
 class LatestFindsPage extends StatelessWidget {
@@ -8,7 +9,7 @@ class LatestFindsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sightings = SightingRepository.getSightings();
+    final sightings = SightingRepository.getSightings().reversed.toList();
 
     return Scaffold(
       appBar: AppBar(title: const Text("Latest Sightings")),
@@ -34,14 +35,31 @@ class LatestFindsPage extends StatelessWidget {
                         ),
                       );
                     },
-                    leading: Image.asset(
-                      sighting.imagePath,
-                      width: 50,
-                      height: 50,
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child:
+                          (sighting.imagePath.startsWith('http')
+                              ? Image.network(
+                                sighting.imagePath,
+                                width: 60,
+                                height: 60,
+                                fit: BoxFit.cover,
+                                errorBuilder:
+                                    (context, error, stackTrace) => const Icon(
+                                      Icons.broken_image,
+                                      size: 40,
+                                    ),
+                              )
+                              : Image.asset(
+                                sighting.imagePath,
+                                width: 60,
+                                height: 60,
+                                fit: BoxFit.cover,
+                              )),
                     ),
                     title: Text(sighting.birdName),
                     subtitle: Text(
-                      "${sighting.dateTime.toLocal()} • ${sighting.locationName}",
+                      "${DateFormat('MM/dd/yyyy - hh:mm a').format(sighting.dateTime)} at ${sighting.locationName}",
                     ),
                   );
                 },
