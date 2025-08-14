@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'providers/user_provider.dart';
 
 void main() async {
+  // Program starts!
   WidgetsFlutterBinding.ensureInitialized();
   await BirdRepository().getBirds();
   runApp(

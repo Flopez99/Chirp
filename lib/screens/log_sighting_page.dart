@@ -38,7 +38,7 @@ class _LogSightingPageState extends State<LogSightingPage> {
 
   @override
   Widget build(BuildContext context) {
-    final username = Provider.of<UserProvider>(context).username;
+    final userId = Provider.of<UserProvider>(context).userId;
 
     return Scaffold(
       appBar: AppBar(title: const Text("Log a Sighting")),
@@ -135,25 +135,50 @@ class _LogSightingPageState extends State<LogSightingPage> {
 
               const SizedBox(height: 24),
               ElevatedButton.icon(
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState!.validate() &&
                       selectedBird != null) {
+                    final username =
+                        Provider.of<UserProvider>(
+                          context,
+                          listen: false,
+                        ).username;
+
+                    // Construct BirdSighting with backend fields:
                     final newSighting = BirdSighting(
-                      seenBy: username,
+                      userId: int.tryParse(
+                        userId,
+                      ), // You might want to store userId somewhere or get from provider
+                      birdId: selectedBird!.id,
+                      loggedAt: selectedDateTime,
+                      latitude: null, // Replace with picked location lat
+                      longitude: null, // Replace with picked location long
+                      photoUrls: [
+                        selectedBird?.photoUrl ?? '',
+                      ], // Using bird photo url for now
+                      notes: null, // Add notes UI if needed
                       birdName: selectedBird!.name,
-                      imagePath:
-                          selectedImage?.path ?? selectedBird?.photoUrl ?? '',
-                      dateTime: selectedDateTime,
+                      seenBy: username,
                       locationName: "Unknown Location",
                     );
 
-                    SightingRepository.addSighting(newSighting);
+                    try {
+                      await SightingRepository.addSighting(newSighting);
+                      print("SIGHTING GETTING LOGGED");
+                      print(newSighting.loggedAt);
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Sighting logged!")),
-                    );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Sighting logged!")),
+                      );
 
-                    Navigator.pop(context, true);
+                      Navigator.pop(context, true);
+                    } catch (e) {
+                      print("ERROR WITH SIGHTING");
+                      print(newSighting.loggedAt);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Error logging sighting: $e")),
+                      );
+                    }
                   }
                 },
                 icon: const Icon(Icons.save),

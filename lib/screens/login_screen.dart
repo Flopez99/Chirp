@@ -109,9 +109,12 @@ class _LoginFormState extends State<_LoginForm> {
         if (userResponse.statusCode == 200) {
           final userData = jsonDecode(userResponse.body);
           final username = userData['username'];
-
+          final userId = userData['id'];
           // Store in provider
-          Provider.of<UserProvider>(context, listen: false).setUser(username);
+          Provider.of<UserProvider>(
+            context,
+            listen: false,
+          ).setUser(username, userId.toString());
 
           Navigator.pushReplacement(
             context,

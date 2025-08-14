@@ -1,4 +1,5 @@
 class Bird {
+  final int id;
   final String name; // Common name
   final String scientificName;
   final String? photoUrl;
@@ -9,6 +10,7 @@ class Bird {
   final bool endangered;
 
   Bird({
+    required this.id,
     required this.name,
     required this.scientificName,
     this.photoUrl,
@@ -21,6 +23,7 @@ class Bird {
 
   factory Bird.fromJson(Map<String, dynamic> json) {
     return Bird(
+      id: json['id'],
       name: json['name'],
       scientificName: json['scientificName'],
       photoUrl: json['photoUrl'],
@@ -34,6 +37,7 @@ class Bird {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'name': name,
       'scientificName': scientificName,
       'photoUrl': photoUrl,
