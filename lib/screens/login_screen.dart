@@ -7,6 +7,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import '../screens/home_page.dart';
 import '../widgets/responsive_layout.dart';
+// import 'package:chirp/config/constants.dart';
 
 const String baseUrl = 'http://127.0.0.1:5000'; // Change this in production
 final storage = FlutterSecureStorage();
@@ -18,7 +19,7 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: ResponsiveLayout(
-        //Chooses the widget based on the device
+        //Chooses the widget size based on the device
         mobile: _LoginForm(maxWidth: double.infinity), // full width for mobile
         tablet: _LoginForm(maxWidth: 500),
         desktop: _LoginForm(maxWidth: 400),
@@ -60,6 +61,7 @@ class _LoginFormState extends State<_LoginForm> {
   }
 
   void _register() {
+    // Switch to register screen
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => RegisterScreen()),
@@ -75,6 +77,7 @@ class _LoginFormState extends State<_LoginForm> {
     final email = emailController.text.trim();
     final password = passwordController.text;
 
+    //Checks if fields are empty
     if (email.isEmpty || password.isEmpty) {
       setState(() {
         loginMessage = 'Email and password are required.';
@@ -91,13 +94,15 @@ class _LoginFormState extends State<_LoginForm> {
         body: jsonEncode({'email': email, 'password': password}),
       );
 
+      //Succesful response
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final token = data['access_token']?.trim();
 
+        //Stores user token as logged
         await storage.write(key: 'jwt', value: token);
 
-        // 2. Fetch user info from /me
+        // 2. Fetch user info from /me using the token
         final userResponse = await http.get(
           Uri.parse('$baseUrl/me'),
           headers: {

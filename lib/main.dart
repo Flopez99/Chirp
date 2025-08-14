@@ -5,14 +5,17 @@ import 'package:provider/provider.dart';
 import 'providers/user_provider.dart';
 
 void main() async {
-  // Program starts!
+  // Program starts
   WidgetsFlutterBinding.ensureInitialized();
-  await BirdRepository().getBirds();
+
+  await BirdRepository()
+      .getBirds(); //Grabbing birds from DB and getting them cached before app runs.
+
   runApp(
     MultiProvider(
       providers: [ChangeNotifierProvider(create: (_) => UserProvider())],
       child: const ChirpApp(),
-    ),
+    ), // Provider that allows holding logged in user
   );
 }
 
@@ -23,7 +26,13 @@ class ChirpApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Chirp',
-      theme: ThemeData(primarySwatch: Colors.green),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.green, // any Color
+          brightness: Brightness.light,
+        ),
+        useMaterial3: true,
+      ),
       debugShowCheckedModeBanner: false,
       home: const LoginScreen(), //First screen the user sees
     );
