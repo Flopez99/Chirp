@@ -34,7 +34,7 @@ class ChirpApp extends StatelessWidget {
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
-      home: const LoginScreen(), //First screen the user sees
+      home: LoginScreen(), //First screen the user sees
     );
   }
 }

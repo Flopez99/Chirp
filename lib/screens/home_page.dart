@@ -32,7 +32,7 @@ class _HomePageState extends State<HomePage> {
     void logout() {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        MaterialPageRoute(builder: (context) => LoginScreen()),
       );
     }
 

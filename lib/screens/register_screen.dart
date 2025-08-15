@@ -137,6 +137,7 @@ class _RegisterScreenFormState extends State<_RegisterScreenForm> {
               children: [
                 const Text(
                   'Join Us!',
+                  key: Key('register_title'),
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 24),
