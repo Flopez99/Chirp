@@ -38,6 +38,7 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
+        key: Key("homepage"),
         title: Text(username),
         actions: [
           TextButton(
