@@ -91,26 +91,52 @@ class _MyAviaryPageState extends State<MyAviaryPage> {
                   // Use loggedAt datetime
                   final sightingDate = sighting.loggedAt;
 
-                  // Fetch bird by ID or scientific name, adjust if needed
-                  final bird = BirdRepository().getBirdByScientificName(
-                    sighting.birdName ?? '',
-                  );
-
                   return ListTile(
-                    onTap: () {
-                      if (bird != null) {
+                    onTap: () async {
+                      print("TAP sighting id=${sighting.id} name=${sighting.birdName} code=${sighting.speciesCode}");
+
+                      final code = sighting.speciesCode ?? '';
+                      print("CODE: $code");
+
+                      if (code.isEmpty) {
+                        print("EARLY RETURN: missing species code");
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Missing species code')),
+                        );
+                        return;
+                      }
+
+                      try {
+                        print("FETCH bird by code...");
+                        final bird = await BirdRepository().getBirdBySpeciesCodeAsync(code);
+                        print("FETCH DONE. bird=${bird?.name} sci=${bird?.scientificName}");
+
+                        if (!mounted) return;
+
+                        if (bird == null) {
+                          print("EARLY RETURN: bird null (404?)");
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Bird info not found')),
+                          );
+                          return;
+                        }
+
+                        print("NAVIGATING...");
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => BirdDetailPage(bird: bird),
-                          ),
+                          MaterialPageRoute(builder: (_) => BirdDetailPage(bird: bird)),
                         );
-                      } else {
+                      } catch (e, st) {
+                        print("ERROR loading bird: $e");
+                        print("STACK: $st");
+                        if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Bird info not found')),
+                          SnackBar(content: Text('Error loading bird: $e')),
                         );
                       }
                     },
+
+
                     leading: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child:

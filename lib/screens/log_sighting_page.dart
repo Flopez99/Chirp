@@ -160,6 +160,7 @@ class _LogSightingPageState extends State<LogSightingPage> {
                       birdName: selectedBird!.name,
                       seenBy: username,
                       locationName: "Unknown Location",
+                      speciesCode: selectedBird!.speciesCode,
                     );
 
                     try {
@@ -174,6 +175,7 @@ class _LogSightingPageState extends State<LogSightingPage> {
                       Navigator.pop(context, true);
                     } catch (e) {
                       print("ERROR WITH SIGHTING");
+                      print(e);
                       print(newSighting.loggedAt);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text("Error logging sighting: $e")),

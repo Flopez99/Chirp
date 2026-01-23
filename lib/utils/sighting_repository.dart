@@ -1,3 +1,4 @@
+import '../models/bird.dart';
 import '../models/bird_sighting.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -16,9 +17,14 @@ class SightingRepository {
       final List<dynamic> jsonData = jsonDecode(response.body);
       return jsonData.map((json) => BirdSighting.fromJson(json)).toList();
     } else {
+      print(response.statusCode);
+      print(response.body);
+
       throw Exception('Failed to load sightings');
     }
   }
+
+
 
   static Future<BirdSighting> addSighting(BirdSighting sighting) async {
     final body = jsonEncode(sighting.toJson());
@@ -32,6 +38,8 @@ class SightingRepository {
     if (response.statusCode == 201) {
       return BirdSighting.fromJson(jsonDecode(response.body));
     } else {
+      print("STATUS: ${response.statusCode}");
+      print("BODY: ${response.body}");
       throw Exception('Failed to add sighting');
     }
   }

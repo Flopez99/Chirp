@@ -8,6 +8,7 @@ class BirdSighting {
   final List<String>? photoUrls;
   final String? notes;
 
+  final String? speciesCode;
   // Optional fields for UI display:
   final String? birdName;
   final String? seenBy;
@@ -17,6 +18,7 @@ class BirdSighting {
     this.id,
     this.userId,
     this.birdId,
+    this.speciesCode,
     required this.loggedAt,
     this.latitude,
     this.longitude,
@@ -28,36 +30,39 @@ class BirdSighting {
   });
 
   factory BirdSighting.fromJson(Map<String, dynamic> json) {
+    // accept either casing
+    final loggedAtRaw = json['loggedAt'] ?? json['logged_at'];
+    final speciesRaw = json['speciesCode'] ?? json['species_code'];
+
+    if (loggedAtRaw == null) {
+      throw Exception("Missing loggedAt/logged_at in response: $json");
+    }
+
     return BirdSighting(
-      id: json['id'] as int?,
-      userId: json['userId'] as int?,
-      birdId: json['birdId'] as int?,
-      loggedAt: DateTime.parse(json['loggedAt']),
-      latitude:
-          (json['latitude'] != null)
-              ? (json['latitude'] as num).toDouble()
-              : null,
-      longitude:
-          (json['longitude'] != null)
-              ? (json['longitude'] as num).toDouble()
-              : null,
-      photoUrls:
-          (json['photoUrls'] != null)
-              ? List<String>.from(json['photoUrls'])
-              : null,
-      notes: json['notes'] as String?,
-      birdName:
-          json['birdName'] as String?, // Optional, if your backend provides
-      seenBy: json['seenBy'] as String?, // Optional, if your backend provides
-      locationName: json['locationName'] as String?, // Optional
+      id: (json['id'] ?? json['sightingId']) as int?,
+      userId: (json['userId'] ?? json['user_id']) as int?,
+      birdId: (json['birdId'] ?? json['bird_id']) as int?,
+      speciesCode: speciesRaw?.toString(), // ✅ nullable
+      loggedAt: DateTime.parse(loggedAtRaw.toString()),
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
+      photoUrls: (json['photoUrls'] ?? json['photo_urls']) == null
+          ? []
+          : List<String>.from((json['photoUrls'] ?? json['photo_urls']) as List),
+      notes: json['notes']?.toString(),
+      birdName: (json['birdName'] ?? json['bird_name'])?.toString(),
+      seenBy: (json['seenBy'] ?? json['seen_by'])?.toString(),
+      locationName: (json['locationName'] ?? json['location_name'])?.toString(),
     );
   }
+
 
   Map<String, dynamic> toJson() {
     return {
       if (id != null) 'id': id,
       if (userId != null) 'userId': userId,
       if (birdId != null) 'birdId': birdId,
+      if (speciesCode != null) 'speciesCode': speciesCode,
       'loggedAt': loggedAt.toIso8601String(),
       if (latitude != null) 'latitude': latitude,
       if (longitude != null) 'longitude': longitude,

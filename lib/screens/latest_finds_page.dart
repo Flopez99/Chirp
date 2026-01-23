@@ -31,12 +31,11 @@ class _LatestFindsPageState extends State<LatestFindsPage> {
       setState(() {
         sightings = fetchedSightings.reversed.toList();
       });
-    } catch (e) {
+    } catch (e, st) {
       print("Error loading latest sightings: $e");
-      setState(() {
-        sightings = [];
-      });
-    } finally {
+      setState(() => sightings = []);
+
+  } finally {
       setState(() {
         isLoading = false;
       });
@@ -64,26 +63,39 @@ class _LatestFindsPageState extends State<LatestFindsPage> {
                           : 'assets/images/placeholder_bird.png';
 
                   final sightingDate = sighting.loggedAt;
-
-                  final bird = BirdRepository().getBirdByScientificName(
-                    sighting.birdName ?? '',
-                  );
-
                   return ListTile(
-                    onTap: () {
-                      if (bird != null) {
+                    onTap: () async {
+                      final scientific = sighting.birdName ?? '';
+                      if (scientific.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Missing bird id')),
+                        );
+                        return;
+                      }
+
+                      try {
+                        final bird = await BirdRepository().getBirdBySpeciesCodeAsync(sighting.speciesCode!);
+                        if (!mounted) return;
+
+                        if (bird == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Bird info not found')),
+                          );
+                          return;
+                        }
+
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => BirdDetailPage(bird: bird),
-                          ),
+                          MaterialPageRoute(builder: (_) => BirdDetailPage(bird: bird)),
                         );
-                      } else {
+                      } catch (e) {
+                        if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Bird info not found')),
+                          SnackBar(content: Text('Error loading bird: $e')),
                         );
                       }
                     },
+
                     leading: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child:

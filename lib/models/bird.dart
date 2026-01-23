@@ -1,6 +1,7 @@
 class Bird {
   final int id;
   final String name; // Common name
+  final String speciesCode;
   final String scientificName;
   final String? photoUrl;
   final String? description;
@@ -13,6 +14,7 @@ class Bird {
     required this.id,
     required this.name,
     required this.scientificName,
+    required this.speciesCode,
     this.photoUrl,
     this.description,
     required this.commonlySeen,
@@ -25,6 +27,7 @@ class Bird {
     return Bird(
       id: json['id'],
       name: json['name'],
+      speciesCode: json['speciesCode'],
       scientificName: json['scientificName'],
       photoUrl: json['photoUrl'],
       description: json['description'],
