@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'screens/login_screen.dart';
 import 'package:provider/provider.dart';
 import 'providers/user_provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 
 void main() async {
   // Program starts
@@ -10,6 +12,22 @@ void main() async {
 
   await BirdRepository()
       .getBirds(); //Grabbing birds from DB and getting them cached before app runs.
+
+  await Firebase.initializeApp(
+    options: const FirebaseOptions(
+      apiKey: "AIzaSyB8hKUX_vxJ4o3pNPAudwjtJY_tKgj0ifM",
+      authDomain: "chirp-60b12.firebaseapp.com",
+      projectId: "chirp-60b12",
+      storageBucket: "chirp-60b12.firebasestorage.app", // IMPORTANT: see note below
+      messagingSenderId: "1029341009830",
+      appId: "1:1029341009830:web:41520b1210e51efb9ce167",
+      // measurementId is NOT needed for Flutter Firebase
+    ),
+  );
+
+  final app = Firebase.app();
+  debugPrint("Firebase initialized: ${app.name}");
+
 
   runApp(
     MultiProvider(

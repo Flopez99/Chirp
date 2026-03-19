@@ -1,15 +1,17 @@
-import 'dart:io';
-
 import 'package:chirp/providers/user_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:dropdown_search/dropdown_search.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../models/bird_sighting.dart';
 import '../models/bird.dart';
 import '../utils/sighting_repository.dart';
 import 'package:intl/intl.dart';
 import '../utils/bird_repository.dart';
+import 'dart:typed_data';
+import 'package:file_picker/file_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:uuid/uuid.dart';
 
 class LogSightingPage extends StatefulWidget {
   const LogSightingPage({super.key});
@@ -23,17 +25,61 @@ class _LogSightingPageState extends State<LogSightingPage> {
 
   Bird? selectedBird;
   DateTime selectedDateTime = DateTime.now();
-  File? selectedImage;
 
-  final ImagePicker _picker = ImagePicker();
+  Uint8List? selectedImageBytes;
+  String selectedImageMime = 'image/jpeg';
+  String? selectedImageName;
+
+  final _uuid = const Uuid();
+
+  Future<String?> _uploadImageForSighting(String sightingTempId) async {
+    if (selectedImageBytes == null) return null;
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception("User not authenticated");
+    }
+
+    final photoId = _uuid.v4();
+    final path =
+        'users/${user.uid}/sightings/$sightingTempId/$photoId';
+
+    final ref = FirebaseStorage.instance.ref(path);
+
+    final snapshot = await ref.putData(
+      selectedImageBytes!,
+      SettableMetadata(contentType: selectedImageMime),
+    );
+
+    final downloadUrl = await snapshot.ref.getDownloadURL();
+    return downloadUrl;
+  }
+
 
   Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() {
-        selectedImage = File(image.path);
-      });
-    }
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      withData: true,
+    );
+
+    if (result == null || result.files.isEmpty) return;
+
+    final file = result.files.first;
+    final bytes = file.bytes;
+    if (bytes == null) return;
+
+    // Infer mime from extension (good enough for now)
+    final name = (file.name).toLowerCase();
+    String mime = 'image/jpeg';
+    if (name.endsWith('.png')) mime = 'image/png';
+    if (name.endsWith('.webp')) mime = 'image/webp';
+    if (name.endsWith('.gif')) mime = 'image/gif';
+
+    setState(() {
+      selectedImageBytes = bytes;
+      selectedImageMime = mime;
+      selectedImageName = file.name;
+    });
   }
 
   @override
@@ -62,9 +108,9 @@ class _LogSightingPageState extends State<LogSightingPage> {
                     border: Border.all(color: Colors.black26),
                   ),
                   child:
-                      selectedImage != null
-                          ? Image.file(selectedImage!, fit: BoxFit.cover)
-                          : const Center(child: Text("Tap to upload image")),
+                    selectedImageBytes != null
+                        ? Image.memory(selectedImageBytes!, fit: BoxFit.cover)
+                        : const Center(child: Text("Tap to upload image")),
                 ),
               ),
 
@@ -135,55 +181,74 @@ class _LogSightingPageState extends State<LogSightingPage> {
 
               const SizedBox(height: 24),
               ElevatedButton.icon(
-                onPressed: () async {
-                  if (_formKey.currentState!.validate() &&
-                      selectedBird != null) {
-                    final username =
-                        Provider.of<UserProvider>(
-                          context,
-                          listen: false,
-                        ).username;
+                  onPressed: () async {
+                    if (!_formKey.currentState!.validate() || selectedBird == null) {
+                      return;
+                    }
 
-                    // Construct BirdSighting with backend fields:
-                    final newSighting = BirdSighting(
-                      userId: int.tryParse(
-                        userId,
-                      ), // You might want to store userId somewhere or get from provider
-                      birdId: selectedBird!.id,
-                      loggedAt: selectedDateTime,
-                      latitude: null, // Replace with picked location lat
-                      longitude: null, // Replace with picked location long
-                      photoUrls: [
-                        selectedBird?.photoUrl ?? '',
-                      ], // Using bird photo url for now
-                      notes: null, // Add notes UI if needed
-                      birdName: selectedBird!.name,
-                      seenBy: username,
-                      locationName: "Unknown Location",
-                      speciesCode: selectedBird!.speciesCode,
-                    );
+                    final scaffold = ScaffoldMessenger.of(context);
 
                     try {
-                      await SightingRepository.addSighting(newSighting);
-                      print("SIGHTING GETTING LOGGED");
-                      print(newSighting.loggedAt);
+                      debugPrint("SUBMIT: start");
+                      debugPrint("selectedImageBytes null? ${selectedImageBytes == null}");
+                      debugPrint("auth user: ${FirebaseAuth.instance.currentUser?.uid}");
 
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      scaffold.showSnackBar(
+                        const SnackBar(content: Text("Uploading photo...")),
+                      );
+
+                      final username =
+                          Provider.of<UserProvider>(context, listen: false).username;
+
+                      // Temporary ID just for storage path
+                      final tempSightingId =
+                      DateTime.now().millisecondsSinceEpoch.toString();
+
+                      // 1️⃣ Upload image (if any)
+                      debugPrint("SUBMIT: uploading...");
+                      final uploadedPhotoUrl = await _uploadImageForSighting(tempSightingId);
+                      debugPrint("SUBMIT: upload done. url? ${uploadedPhotoUrl != null}");
+                      debugPrint("SUBMIT: url = $uploadedPhotoUrl");
+
+                      scaffold.showSnackBar(
+                        const SnackBar(content: Text("Saving sighting...")),
+                      );
+
+                      // 2️⃣ Build sighting payload
+                      final newSighting = BirdSighting(
+                        userId: int.tryParse(userId),
+                        birdId: selectedBird!.id,
+                        loggedAt: selectedDateTime,
+                        latitude: null,
+                        longitude: null,
+                        photoUrls: [
+                          if (uploadedPhotoUrl != null) uploadedPhotoUrl,
+                        ],
+                        notes: null,
+                        birdName: selectedBird!.name,
+                        seenBy: username,
+                        locationName: "Unknown Location",
+                        speciesCode: selectedBird!.speciesCode,
+                      );
+
+                      // 3️⃣ Send to backend
+                      await SightingRepository.addSighting(newSighting);
+
+                      scaffold.showSnackBar(
                         const SnackBar(content: Text("Sighting logged!")),
                       );
 
                       Navigator.pop(context, true);
-                    } catch (e) {
-                      print("ERROR WITH SIGHTING");
-                      print(e);
-                      print(newSighting.loggedAt);
+                    } catch (e, st) {
+                      debugPrint("ERROR LOGGING SIGHTING: $e");
+                      debugPrintStack(stackTrace: st);
+
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text("Error logging sighting: $e")),
                       );
                     }
-                  }
-                },
-                icon: const Icon(Icons.save),
+                  },
+                  icon: const Icon(Icons.save),
                 label: const Text("Submit"),
               ),
             ],

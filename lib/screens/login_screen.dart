@@ -7,6 +7,10 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import '../screens/home_page.dart';
 import '../widgets/responsive_layout.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
 // import 'package:chirp/config/constants.dart';
 
 const String baseUrl = 'http://127.0.0.1:5000'; // Change this in production
@@ -51,12 +55,26 @@ class _LoginFormState extends State<_LoginForm> {
   String loginMessage = '';
   bool isLoading = false;
 
+  Future<void> ensureAnonAuth() async {
+    final auth = FirebaseAuth.instance;
+
+    if (auth.currentUser == null) {
+      final cred = await auth.signInAnonymously();
+      debugPrint("Signed in anon uid: ${cred.user?.uid}");
+    } else {
+      debugPrint("Already signed in uid: ${auth.currentUser!.uid}");
+    }
+  }
+
   @override
   void initState() {
     //
     super.initState();
     emailController = TextEditingController();
     passwordController = TextEditingController();
+    Future.microtask(() async {
+      await ensureAnonAuth();
+    });
   }
 
   @override
@@ -164,6 +182,11 @@ class _LoginFormState extends State<_LoginForm> {
             padding: const EdgeInsets.all(24.0),
             child: Column(
               children: [
+                SvgPicture.asset(
+                  'assets/logos/BIRB.svg',
+                  width: 200,
+                  height: 200,
+                ),
                 const Text(
                   'Welcome to Chirp!',
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
