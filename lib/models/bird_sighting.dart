@@ -7,6 +7,7 @@ class BirdSighting {
   final double? longitude;
   final List<String>? photoUrls;
   final String? notes;
+  final String? description;
 
   final String? speciesCode;
   // Optional fields for UI display:
@@ -24,6 +25,7 @@ class BirdSighting {
     this.longitude,
     this.photoUrls,
     this.notes,
+    this.description,
     this.birdName,
     this.seenBy,
     this.locationName,
@@ -46,16 +48,19 @@ class BirdSighting {
       loggedAt: DateTime.parse(loggedAtRaw.toString()),
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
-      photoUrls: (json['photoUrls'] ?? json['photo_urls']) == null
-          ? []
-          : List<String>.from((json['photoUrls'] ?? json['photo_urls']) as List),
+      photoUrls:
+          (json['photoUrls'] ?? json['photo_urls']) == null
+              ? []
+              : List<String>.from(
+                (json['photoUrls'] ?? json['photo_urls']) as List,
+              ),
       notes: json['notes']?.toString(),
+      description: (json['description'])?.toString(),
       birdName: (json['birdName'] ?? json['bird_name'])?.toString(),
       seenBy: (json['seenBy'] ?? json['seen_by'])?.toString(),
       locationName: (json['locationName'] ?? json['location_name'])?.toString(),
     );
   }
-
 
   Map<String, dynamic> toJson() {
     return {
@@ -68,6 +73,7 @@ class BirdSighting {
       if (longitude != null) 'longitude': longitude,
       if (photoUrls != null) 'photoUrls': photoUrls,
       if (notes != null) 'notes': notes,
+      if (description != null) 'description': description,
       if (birdName != null) 'birdName': birdName,
       if (seenBy != null) 'seenBy': seenBy,
       if (locationName != null) 'locationName': locationName,

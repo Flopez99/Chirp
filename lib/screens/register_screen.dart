@@ -1,11 +1,11 @@
 import 'dart:convert';
+import 'package:chirp/config/api_config.dart';
 import 'package:chirp/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../widgets/responsive_layout.dart';
 
-const String baseUrl = 'http://127.0.0.1:5000'; // Change this in production
 final storage = FlutterSecureStorage();
 
 class RegisterScreen extends StatelessWidget {
@@ -89,7 +89,7 @@ class _RegisterScreenFormState extends State<_RegisterScreenForm> {
 
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/register'),
+        ApiConfig.uri("/register"),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'email': email,

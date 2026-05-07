@@ -1,13 +1,11 @@
-import '../models/bird.dart';
+import 'package:chirp/config/api_config.dart';
 import '../models/bird_sighting.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class SightingRepository {
-  static const String baseUrl = 'http://127.0.0.1:5000';
-
   static Future<List<BirdSighting>> fetchSightings({String? userId}) async {
-    final uri = Uri.parse('$baseUrl/sightings').replace(
+    final uri = ApiConfig.uri("/sightings").replace(
       queryParameters: userId != null ? {'user_id': userId.toString()} : null,
     );
 
@@ -24,13 +22,11 @@ class SightingRepository {
     }
   }
 
-
-
   static Future<BirdSighting> addSighting(BirdSighting sighting) async {
     final body = jsonEncode(sighting.toJson());
 
     final response = await http.post(
-      Uri.parse('$baseUrl/sightings/add'),
+      ApiConfig.uri("/sightings/add"),
       headers: {'Content-Type': 'application/json'},
       body: body,
     );

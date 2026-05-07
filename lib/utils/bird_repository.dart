@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:chirp/config/api_config.dart';
 import 'package:chirp/services/bird_api.dart';
 import 'package:http/http.dart' as http;
 import '../models/bird.dart';
 
 class BirdRepository {
-  static const String baseUrl = 'http://127.0.0.1:5000';
-
   static final BirdRepository _instance = BirdRepository._internal();
   factory BirdRepository() => _instance;
   BirdRepository._internal();
@@ -96,7 +95,7 @@ class BirdRepository {
   // -----------------------------
 
   Future<Bird?> getBirdBySpeciesCodeAsync(String code) async {
-    final uri = Uri.parse("$baseUrl/birds/by-species/$code");
+    final uri = ApiConfig.uri("/birds/by-species/$code");
     final res = await http.get(uri);
 
     if (res.statusCode == 200) {
@@ -106,7 +105,9 @@ class BirdRepository {
 
     if (res.statusCode == 404) return null;
 
-    throw Exception("Failed to fetch bird ($code): ${res.statusCode} ${res.body}");
+    throw Exception(
+      "Failed to fetch bird ($code): ${res.statusCode} ${res.body}",
+    );
   }
 
   Bird getBirdByScientificName(String scientificName) {
@@ -129,7 +130,6 @@ class BirdRepository {
     }
     return bird;
   }
-
 
   void clearCache() {
     _byScientificName.clear();

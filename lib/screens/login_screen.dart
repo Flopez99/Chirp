@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:chirp/config/api_config.dart';
 import 'package:chirp/providers/user_provider.dart';
 import 'package:chirp/screens/register_screen.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +14,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 // import 'package:chirp/config/constants.dart';
 
-const String baseUrl = 'http://127.0.0.1:5000'; // Change this in production
 final storage = FlutterSecureStorage();
 
 class LoginScreen extends StatelessWidget {
@@ -114,7 +114,7 @@ class _LoginFormState extends State<_LoginForm> {
     try {
       //Login
       final response = await widget.client.post(
-        Uri.parse('$baseUrl/login'),
+        ApiConfig.uri("/login"),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       );
@@ -129,7 +129,7 @@ class _LoginFormState extends State<_LoginForm> {
 
         // 2. Fetch user info from /me using the token
         final userResponse = await widget.client.get(
-          Uri.parse('$baseUrl/me'),
+          ApiConfig.uri("/me"),
           headers: {
             'Authorization': 'Bearer $token',
             'Content-Type': 'application/json',
